@@ -395,26 +395,35 @@ app.post("/gradePvMove", async (req, res) => {
 
 
 
-    app.post("/analyzewithstockfish",async (req,res) =>
-    {
-        await new Promise(resolve => setTimeout(resolve, 500));
-        const { username } = req.body;
-        const sessionUser = getUserSession(username);
-    sessionUser.storedanalysis = [];
+app.post("/analyzewithstockfish", async (req, res) => {
+    const { username } = req.body;
+    const sessionUser = getUserSession(username);
+    
     console.log("POST /analyzewithstockfish hit");
+    console.log("mArray before wait:", sessionUser.mArray); // Debug
+    
+    // ⭐ WAIT for mArray to be populated
+    await waitForMovesArray(sessionUser);
+    
+    console.log("mArray after wait:", sessionUser.mArray); // Debug
+    
+    sessionUser.storedanalysis = [];
     const chess = new Chess();
     const fens = [];
+    
     for (const move of sessionUser.mArray) {
-    try {
-    chess.move(move);
-    fens.push(chess.fen());
-    } catch (err) {
-    console.warn("Invalid move:", move, err.message);
-    fens.push(null);
+        try {
+            chess.move(move);
+            fens.push(chess.fen());
+        } catch (err) {
+            console.warn("Invalid move:", move, err.message);
+            fens.push(null);
+        }
     }
-    }
-    res.json({fens});
-    });
+    
+    console.log("Generated fens:", fens.length); // Debug
+    res.json({ fens });
+});
 
 
     app.post("/wasmresults",async (req,res) =>
