@@ -278,7 +278,7 @@ async function throttledGet(url) {
             if (!sessionUser.npg /*|| !sessionUser.npg.pgn*/) {
             return res.status(400).json({ error: "No PGN data provided yet." });
         }
-        movesarray(username);
+        await movesarray(username);
         try{
         //console.log('sessionuser.marray',sessionUser.mArray);
             await waitForMovesArray(sessionUser);
