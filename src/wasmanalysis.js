@@ -33,6 +33,7 @@ async function analyte() {
     const analysisKey = sessionStorage.getItem("analysisKey");
     let stockfishService;
     try {
+        // Step 1: Get FENs
         const response = await fetch("/analyzewithstockfish", {
             method: "POST",
             headers: { 'Content-Type': "application/json" },
@@ -44,32 +45,28 @@ async function analyte() {
 
         stockfishService = await prewarmStockfish();
         const { fens } = data;
-
         let recommendedWorkers = getRecommendedWorkersNb();
 
-
+        // Step 2: Analyze initial positions
         const results = await runInBatches(fens, recommendedWorkers, async (fen) => {
             if (!fen) return { fen: null, analysis: null };
             const analysis = await stockfishService.analyzeFen(fen, { depth: 15 });
             return { fen, analysis };
         });
 
+        // Step 3: Calculate best moves
         const bestfens = [];
         for (let i = 0; i < results.length; i++) {
             if (i === results.length - 1) continue;
-
             const r = results[i];
             const bestmove = r.analysis?.bestmove;
-
             if (!r.fen || !bestmove) {
                 bestfens.push(null);
                 continue;
             }
-
             const chess = new Chess();
             chess.load(r.fen);
             const moveResult = chess.move(bestmove);
-
             if (moveResult) {
                 bestfens.push(chess.fen());
             } else {
@@ -78,35 +75,28 @@ async function analyte() {
             }
         }
 
+ 
         const bestresults = await runInBatches(bestfens, recommendedWorkers, async (bestfen) => {
             if (!bestfen) return null;
             const bestanalysis = await stockfishService.analyzeFen(bestfen, { depth: 15 });
             return { fen: bestfen, analysis: bestanalysis };
         });
 
-        const payload = { fens, results, bestfens, bestresults, username, analysisKey };
+  
+        console.log("✅ Best results complete:", bestresults.length, "items");
 
-        console.log(
-            "Payload size (MB):",
-            (JSON.stringify(payload).length / 1024 / 1024).toFixed(2)
-        ); 
+        // Step 6: NOW send everything
+        const payload = { fens, results, bestfens, bestresults, username, analysisKey };
+        console.log("Payload size (MB):", (JSON.stringify(payload).length / 1024 / 1024).toFixed(2));
 
         await fetch("/wasmresults", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-                fens,
-                results,
-                bestfens,
-                bestresults,
-                username,
-                analysisKey
-            }),
+            body: JSON.stringify(payload),
         });
 
         sessionStorage.removeItem("analysisKey");
-
-        //console.log("All WASM results sent to backend");
+        console.log("✅ All WASM results sent to backend");
 
     } catch (err) {
         console.error("Error in analyte():", err);
@@ -115,5 +105,4 @@ async function analyte() {
         console.log("Analysis finished (no quit available on stockfishService).");
     }
 }
-
 export default analyte;
