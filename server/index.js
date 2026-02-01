@@ -647,37 +647,30 @@ app.post("/analyzewithstockfish", async (req, res) => {
 
 
 
-    function movesarray(username)
-    {
-        
-            const sessionUser = getUserSession(username);
-        let fixedPgn = sessionUser.npg.pgn
-          .replace(/\{[^}]*\}/g, "")        // remove { ... }
-            .replace(/\[%[^\]]*\]/g, "")      // remove [%eval ...] / [%clk ...]
-            .replace(/\b(White|Black) (wins|resigns|abandons|checkmated|timeout|draws).*$/gmi, "")
-            .replace(/\r?\n/g, "\n")
-            .replace(/"$/, "") 
-            .trim();
-        //fixedPgn = fixedPgn.replace(/\{[^}]*\}/g, "");
-        //console.log(fixedPgn);
+   async function movesarray(username)
+{
+    const sessionUser = getUserSession(username);
+    let fixedPgn = sessionUser.npg.pgn
+      .replace(/\{[^}]*\}/g, "")
+      .replace(/\[%[^\]]*\]/g, "")
+      .replace(/\b(White|Black) (wins|resigns|abandons|checkmated|timeout|draws).*$/gmi, "")
+      .replace(/\r?\n/g, "\n")
+      .replace(/"$/, "") 
+      .trim();
 
-        const chess = new Chess();
-        //console.log('PGN being loaded:', JSON.stringify(npg));
+    const chess = new Chess();
 
-        try{
-            const ok = chess.loadPgn(fixedPgn);
-            console.log("parsed",ok);
-            sessionUser.mArray= chess.history().map(m => m.replace(/[+#?!]+/g, ''));
-
-            console.log(sessionUser.mArray)
-        }
-        catch(err)
-        {
-            console.error("failed parsing",err)
-        }
-        
-
+    try{
+        const ok = chess.loadPgn(fixedPgn);
+        console.log("parsed",ok);
+        sessionUser.mArray= chess.history().map(m => m.replace(/[+#?!]+/g, ''));
+        console.log(sessionUser.mArray)
     }
+    catch(err)
+    {
+        console.error("failed parsing",err)
+    }
+}
     function pgnfromarraymoves(username)
     {
             const sessionUser = getUserSession(username);
