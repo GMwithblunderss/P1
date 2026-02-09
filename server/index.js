@@ -41,7 +41,7 @@
 app.use(cors());
     app.use(express.json({ limit: '5mb' }));
 app.use(express.urlencoded({ limit: '5mb', extended: true }));
-app.use(
+/*app.use(
   [
     '/username',
     '/pgn',
@@ -51,7 +51,7 @@ app.use(
     '/realtimepvupdate'
   ],
   heavyLimiter
-);
+);*/
 
     /*app.get("/", (req, res) => {
         res.send("backend is running ");
@@ -264,7 +264,7 @@ function waitForMovesArray(sessionUser, intervalMs = 50, timeoutMs = 3000) {
     {
         const { username, pgn } = req.body;
             if (!username || !pgn) {
-        throw new Error("Missing username or PGN");
+        return res.status(400).json({ error: "Missing username or PGN" });
         }
         console.log("username:", username);
         const sessionUser = getUserSession(username);
@@ -339,6 +339,7 @@ function waitForMovesArray(sessionUser, intervalMs = 50, timeoutMs = 3000) {
         {
             sessionUser.cachedPGNData = null;
             console.log("couldnt get best moves",err);
+            return res.status(500).json({ error: "Failed to process PGN" });
         }
         
 
