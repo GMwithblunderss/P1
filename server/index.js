@@ -392,10 +392,45 @@ app.post("/gradePvMove", async (req, res) => {
 
 
 
-
-
-
 app.post("/analyzewithstockfish", async (req, res) => {
+  try {
+    const { username } = req.body;
+    const sessionUser = getUserSession(username);
+
+    await waitForMovesArray(sessionUser);
+
+    if (!Array.isArray(sessionUser.mArray) || sessionUser.mArray.length === 0) {
+      return res.status(400).json({ error: "No moves available for analysis" });
+    }
+
+    sessionUser.storedanalysis = [];
+
+    const chess = new Chess();
+    const fens = [];
+
+    for (const move of sessionUser.mArray) {
+      try {
+        chess.move(move);
+        fens.push(chess.fen());
+      } catch {
+        fens.push(null);
+      }
+    }
+
+    res.json({ fens });
+  } catch (err) {
+    console.error("Race crash:", err);
+    res.status(500).json({ error: "Analysis failed" });
+  }
+});
+
+
+
+
+
+
+
+/*app.post("/analyzewithstockfish", async (req, res) => {
     const { username } = req.body;
     const sessionUser = getUserSession(username);
     
@@ -425,7 +460,7 @@ app.post("/analyzewithstockfish", async (req, res) => {
     console.log("Generated fens:", fens.length); // Debug
     res.json({ fens });
 });
-
+ */
 
     app.post("/wasmresults",async (req,res) =>
     {
