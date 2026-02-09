@@ -403,13 +403,14 @@ app.post("/analyzewithstockfish", async (req, res) => {
     console.log("mArray before wait:", sessionUser.mArray); // Debug
     
     // ⭐ WAIT for mArray to be populated
-    await waitForMovesArray(sessionUser);
+    //await waitForMovesArray(sessionUser);
     
-    console.log("mArray after wait:", sessionUser.mArray); // Debug
+    //console.log("mArray after wait:", sessionUser.mArray); // Debug
     
     sessionUser.storedanalysis = [];
     const chess = new Chess();
     const fens = [];
+      console.log(sessionUser.mArray);
     
     for (const move of sessionUser.mArray) {
         try {
