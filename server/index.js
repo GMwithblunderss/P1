@@ -203,13 +203,39 @@ async function throttledGet(url) {
     res.json(data);
     }); */
 
+function waitForMovesArray(sessionUser, intervalMs = 50, timeoutMs = 3000) {
+  return new Promise((resolve, reject) => {
+    const start = Date.now();
+
+    const check = () => {
+      console.log(
+        "[waitForMovesArray]",
+        "len =", sessionUser.mArray?.length,
+        "elapsed =", Date.now() - start
+      );
+
+      if (Array.isArray(sessionUser.mArray) && sessionUser.mArray.length > 0) {
+        return resolve();
+      }
+
+      if (Date.now() - start > timeoutMs) {
+        return reject(new Error("waitForMovesArray TIMEOUT"));
+      }
+
+      setTimeout(check, intervalMs);
+    };
+
+    check();
+  });
+}
 
 
 
 
 
 
-    function waitForMovesArray(sessionUser, intervalMs = 50, timeoutMs = 10000) {
+
+    /* function waitForMovesArray(sessionUser, intervalMs = 50, timeoutMs = 10000) {
   return new Promise((resolve, reject) => {
     const start = Date.now();
     const check = () => {
@@ -224,7 +250,7 @@ async function throttledGet(url) {
     check();
   });
 }
-
+*/
 
 
 
