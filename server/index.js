@@ -421,15 +421,15 @@ app.post("/gradePvMove", async (req, res) => {
 app.post("/analyzewithstockfish", async (req, res) => {
   try {
     const { username } = req.body;
+    console.log("POST /analyzewithstockfish", username);
+
     const sessionUser = getUserSession(username);
+
+    console.log("Before wait, mArray:", sessionUser.mArray);
 
     await waitForMovesArray(sessionUser);
 
-    if (!Array.isArray(sessionUser.mArray) || sessionUser.mArray.length === 0) {
-      return res.status(400).json({ error: "No moves available for analysis" });
-    }
-
-    sessionUser.storedanalysis = [];
+    console.log("After wait, mArray:", sessionUser.mArray);
 
     const chess = new Chess();
     const fens = [];
@@ -438,15 +438,19 @@ app.post("/analyzewithstockfish", async (req, res) => {
       try {
         chess.move(move);
         fens.push(chess.fen());
-      } catch {
+      } catch (err) {
+        console.warn("Invalid move:", move);
         fens.push(null);
       }
     }
 
     res.json({ fens });
   } catch (err) {
-    console.error("Race crash:", err);
-    res.status(500).json({ error: "Analysis failed" });
+    console.error("analyzewithstockfish FAILED:", err.message);
+    return res.status(409).json({
+      error: err.message,
+      hint: "Most likely /pgn did not finish or PGN parsing failed"
+    });
   }
 });
 
